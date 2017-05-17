@@ -17,8 +17,9 @@
  */
 
 #include <linux/io.h>
+#ifdef CONFIG_ANDROID_PMEM
 #include <linux/android_pmem.h>
-
+#endif
 #include <mach/qdsp5/qdsp5vdeccmdi.h>
 #include "adsp.h"
 #include <mach/debug_mm.h>

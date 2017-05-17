@@ -20,7 +20,9 @@
 #include <linux/mtd/nand.h>
 #include <linux/mtd/partitions.h>
 #include <linux/i2c.h>
+#ifdef CONFIG_ANDROID_PMEM
 #include <linux/android_pmem.h>
+#endif
 #include <linux/bootmem.h>
 #include <linux/mfd/marimba.h>
 #include <linux/power_supply.h>
@@ -2006,7 +2008,7 @@ static struct msm_pm_boot_platform_data msm_pm_8625_boot_pdata __initdata = {
 	.mode = MSM_PM_BOOT_CONFIG_REMAP_BOOT_ADDR,
 	.v_addr = MSM_CFG_CTL_BASE,
 };
-
+#ifdef CONFIG_ANDROID_PMEM
 static struct android_pmem_platform_data android_pmem_adsp_pdata = {
 	.name = "pmem_adsp",
 	.allocator_type = PMEM_ALLOCATORTYPE_BITMAP,
@@ -2020,23 +2022,6 @@ static struct platform_device android_pmem_adsp_device = {
 	.dev = { .platform_data = &android_pmem_adsp_pdata },
 };
 
-static unsigned pmem_mdp_size = MSM_PMEM_MDP_SIZE;
-static int __init pmem_mdp_size_setup(char *p)
-{
-	pmem_mdp_size = memparse(p, NULL);
-	return 0;
-}
-
-early_param("pmem_mdp_size", pmem_mdp_size_setup);
-
-static unsigned pmem_adsp_size = MSM_PMEM_ADSP_SIZE;
-static int __init pmem_adsp_size_setup(char *p)
-{
-	pmem_adsp_size = memparse(p, NULL);
-	return 0;
-}
-
-early_param("pmem_adsp_size", pmem_adsp_size_setup);
 
 static struct android_pmem_platform_data android_pmem_audio_pdata = {
 	.name = "pmem_audio",
@@ -2062,6 +2047,25 @@ static struct platform_device android_pmem_device = {
 	.id = 0,
 	.dev = { .platform_data = &android_pmem_pdata },
 };
+#endif
+
+static unsigned reserve_adsp_size = MSM_PMEM_ADSP_SIZE;
+static int __init reserve_adsp_size_setup(char *p)
+{
+	reserve_adsp_size = memparse(p, NULL);
+	return 0;
+}
+
+early_param("reserve_adsp_size", reserve_adsp_size_setup);
+
+static unsigned reserve_mdp_size = MSM_PMEM_MDP_SIZE;
+static int __init reserve_mdp_size_setup(char *p)
+{
+	reserve_mdp_size = memparse(p, NULL);
+	return 0;
+}
+
+early_param("reserve_mdp_size", reserve_mdp_size_setup);
 
 static char *msm_adc_surf_device_names[] = {
 	"XO_ADC",
@@ -2248,9 +2252,11 @@ static struct i2c_board_info i2c2_info[] __initdata = {
 
 static struct platform_device *common_devices[] __initdata = {
 	&android_usb_device,
+#ifdef CONFIG_ANDROID_PMEM
 	&android_pmem_device,
 	&android_pmem_adsp_device,
 	&android_pmem_audio_device,
+#endif
 	&msm_batt_device,
 	&msm_device_adspdec,
 	&msm_device_snd,
@@ -2353,21 +2359,21 @@ early_param("pmem_audio_size", pmem_audio_size_setup);
 static void fix_sizes(void)
 {
 	if (get_ddr_size() > SZ_512M)
-		pmem_adsp_size = CAMERA_ZSL_SIZE;
+		reserve_adsp_size = CAMERA_ZSL_SIZE;
 	else {
 		if (machine_is_qrd_skud_prime() || machine_is_msm8625q_evbd()
 					|| machine_is_msm8625q_skud())
-			pmem_mdp_size = 0;
+			reserve_mdp_size = 0;
 	}
 #ifdef CONFIG_ION_MSM
-	msm_ion_camera_size = pmem_adsp_size;
+	msm_ion_camera_size = reserve_adsp_size;
 	msm_ion_audio_size = MSM_PMEM_AUDIO_SIZE;
 #ifdef CONFIG_CMA
 	msm_ion_camera_size_carving = 0;
 #else
 	msm_ion_camera_size_carving = msm_ion_camera_size;
 #endif
-	msm_ion_sf_size = pmem_mdp_size;
+	msm_ion_sf_size = reserve_mdp_size;
 #endif
 }
 
@@ -2483,8 +2489,8 @@ static void __init size_pmem_devices(void)
 #ifndef CONFIG_MSM_MULTIMEDIA_USE_ION
 //	unsigned int i;
 
-	android_pmem_adsp_pdata.size = pmem_adsp_size;
-	android_pmem_pdata.size = pmem_mdp_size;
+	android_pmem_adsp_pdata.size = reserve_adsp_size;
+	android_pmem_pdata.size = reserve_mdp_size;
 	android_pmem_audio_pdata.size = pmem_audio_size;
 #endif
 #endif

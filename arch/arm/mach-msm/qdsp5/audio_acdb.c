@@ -16,7 +16,9 @@
 #include <linux/wait.h>
 #include <linux/mutex.h>
 #include <linux/io.h>
+#ifdef CONFIG_ANDROID_PMEM
 #include <linux/android_pmem.h>
+#endif
 #include <linux/delay.h>
 #include <linux/dma-mapping.h>
 #include <linux/uaccess.h>
@@ -1160,16 +1162,20 @@ static long audio_acdb_ioctl(struct file *file, unsigned int cmd,
 			MM_ERR("Cannot copy from user\n");
 			return -EFAULT;
 		}
+#ifdef CONFIG_ANDROID_PMEM
 		rc = get_pmem_file(info.fd, &acdb_data.paddr,
 					&acdb_data.kvaddr,
 					&acdb_data.pmem_len,
 					&acdb_data.file);
 		if (rc == 0)
 			acdb_data.pmem_fd = info.fd;
+#endif
 		break;
 	case AUDIO_DEREGISTER_PMEM:
+#ifdef CONFIG_ANDROID_PMEM
 		if (acdb_data.pmem_fd)
 			put_pmem_file(acdb_data.file);
+#endif
 		break;
 	case AUDIO_SET_ACDB_BLK:
 		MM_DBG("IOCTL AUDIO_SET_ACDB_BLK\n");

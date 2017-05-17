@@ -18,7 +18,9 @@
 #include <linux/uaccess.h>
 #include <linux/interrupt.h>
 #include <linux/workqueue.h>
+#ifdef CONFIG_ANDROID_PMEM
 #include <linux/android_pmem.h>
+#endif
 #include <linux/vmalloc.h>
 #include <linux/pm_runtime.h>
 #include <linux/genlock.h>

@@ -22,9 +22,9 @@
 #include <media/v4l2-dev.h>
 #include <media/v4l2-ioctl.h>
 #include <media/v4l2-device.h>
-
+#ifdef CONFIG_ANDROID_PMEM
 #include <linux/android_pmem.h>
-
+#endif
 #include "msm.h"
 #include "msm_ispif.h"
 

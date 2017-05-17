@@ -34,7 +34,9 @@
 #include <linux/vmalloc.h>
 #include <linux/debugfs.h>
 #include <linux/console.h>
+#ifdef CONFIG_ANDROID_PMEM
 #include <linux/android_pmem.h>
+#endif
 #include <linux/kernel.h>
 #include <linux/sched.h>
 #include <linux/time.h>

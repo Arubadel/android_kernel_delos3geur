@@ -22,7 +22,9 @@
 #include <linux/fb.h>
 #include <linux/msm_mdp.h>
 #include <linux/file.h>
+#ifdef CONFIG_ANDROID_PMEM
 #include <linux/android_pmem.h>
+#endif
 #include <linux/major.h>
 
 #include "linux/proc_fs.h"

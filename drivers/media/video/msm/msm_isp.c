@@ -21,7 +21,9 @@
 #include <linux/videodev2.h>
 #include <linux/proc_fs.h>
 #include <linux/vmalloc.h>
+#ifdef CONFIG_ANDROID_PMEM
 #include <linux/android_pmem.h>
+#endif
 
 #include <media/v4l2-dev.h>
 #include <media/v4l2-ioctl.h>

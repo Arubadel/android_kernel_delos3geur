@@ -14,7 +14,9 @@
 #include <linux/msm_adsp.h>
 #include <linux/uaccess.h>
 #include <linux/fs.h>
+#ifdef CONFIG_ANDROID_PMEM
 #include <linux/android_pmem.h>
+#endif
 #include <linux/slab.h>
 #include <linux/pm_qos.h>
 #include <linux/delay.h>

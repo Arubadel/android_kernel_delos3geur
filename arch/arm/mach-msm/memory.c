@@ -33,7 +33,9 @@
 #include <linux/completion.h>
 #include <linux/err.h>
 #endif
+#ifdef CONFIG_ANDROID_PMEM
 #include <linux/android_pmem.h>
+#endif
 #include <mach/msm_iomap.h>
 #include <mach/socinfo.h>
 #include <linux/sched.h>

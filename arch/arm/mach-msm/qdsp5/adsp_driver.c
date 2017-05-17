@@ -25,7 +25,9 @@
 #include <linux/module.h>
 #include "adsp.h"
 #include <linux/msm_adsp.h>
+#ifdef CONFIG_ANDROID_PMEM
 #include <linux/android_pmem.h>
+#endif
 #include <mach/debug_mm.h>
 
 struct adsp_ion_info {
