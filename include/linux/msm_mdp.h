@@ -70,6 +70,16 @@
 #define MSMFB_MDP_PP _IOWR(MSMFB_IOCTL_MAGIC, 156, struct msmfb_mdp_pp)
 #define MSMFB_OVERLAY_VSYNC_CTRL _IOW(MSMFB_IOCTL_MAGIC, 160, unsigned int)
 #define MSMFB_VSYNC_CTRL  _IOW(MSMFB_IOCTL_MAGIC, 161, unsigned int)
+#define MSMFB_BUFFER_SYNC  _IOW(MSMFB_IOCTL_MAGIC, 162, struct mdp_buf_sync)
+#define MSMFB_OVERLAY_COMMIT      _IO(MSMFB_IOCTL_MAGIC, 163)
+#define MSMFB_DISPLAY_COMMIT      _IOW(MSMFB_IOCTL_MAGIC, 164, \
+						struct mdp_display_commit)
+#define MSMFB_METADATA_SET  _IOW(MSMFB_IOCTL_MAGIC, 165, struct msmfb_metadata)
+#define MSMFB_METADATA_GET  _IOW(MSMFB_IOCTL_MAGIC, 166, struct msmfb_metadata)
+#define MSMFB_WRITEBACK_SET_MIRRORING_HINT _IOW(MSMFB_IOCTL_MAGIC, 167, \
+						unsigned int)
+#define MSMFB_ASYNC_BLIT              _IOW(MSMFB_IOCTL_MAGIC, 168, unsigned int)
+
 #define FB_TYPE_3D_PANEL 0x10101010
 #define MDP_IMGTYPE2_START 0x10000
 #define MSMFB_DRIVER_VERSION	0xF9E8D701
@@ -105,6 +115,18 @@ enum {
 	MDP_YCRCB_H1V1,   /* YCrCb interleave */
 	MDP_YCBCR_H1V1,   /* YCbCr interleave */
 	MDP_BGR_565,      /* BGR 565 planer */
+	MDP_BGR_888,      /* BGR 888 */
+	MDP_Y_CBCR_H2V2_VENUS,
+	MDP_BGRX_8888,   /* BGRX 8888 */
+	MDP_RGBA_8888_TILE,	  /* RGBA 8888 in tile format */
+	MDP_ARGB_8888_TILE,	  /* ARGB 8888 in tile format */
+	MDP_ABGR_8888_TILE,	  /* ABGR 8888 in tile format */
+	MDP_BGRA_8888_TILE,	  /* BGRA 8888 in tile format */
+	MDP_RGBX_8888_TILE,	  /* RGBX 8888 in tile format */
+	MDP_XRGB_8888_TILE,	  /* XRGB 8888 in tile format */
+	MDP_XBGR_8888_TILE,	  /* XBGR 8888 in tile format */
+	MDP_BGRX_8888_TILE,	  /* BGRX 8888 in tile format */
+	MDP_YCBYCR_H2V1,  /* YCbYCr interleave */
 	MDP_IMGTYPE_LIMIT,
 	MDP_RGB_BORDERFILL,	/* border fill pipe */
 	MDP_FB_FORMAT = MDP_IMGTYPE2_START,    /* framebuffer format */
@@ -154,6 +176,7 @@ enum {
 #define MDP_OV_PLAY_NOWAIT		0x00200000
 #define MDP_SOURCE_ROTATED_90		0x00100000
 #define MDP_DPP_HSIC			0x00080000
+#define MDP_OVERLAY_PP_CFG_EN		0x00080000
 #define MDP_BACKEND_COMPOSITION		0x00040000
 #define MDP_BORDERFILL_SUPPORTED	0x00010000
 #define MDP_SECURE_OVERLAY_SESSION      0x00008000
@@ -281,6 +304,33 @@ struct dpp_ctrl {
 	int8_t hsic_params[NUM_HSIC_PARAM];
 };
 
+/**
+ * enum mdss_mdp_blend_op - Different blend operations set by userspace
+ *
+ * @BLEND_OP_NOT_DEFINED:    No blend operation defined for the layer.
+ * @BLEND_OP_OPAQUE:         Apply a constant blend operation. The layer
+ *                           would appear opaque in case fg plane alpha is
+ *                           0xff.
+ * @BLEND_OP_PREMULTIPLIED:  Apply source over blend rule. Layer already has
+ *                           alpha pre-multiplication done. If fg plane alpha
+ *                           is less than 0xff, apply modulation as well. This
+ *                           operation is intended on layers having alpha
+ *                           channel.
+ * @BLEND_OP_COVERAGE:       Apply source over blend rule. Layer is not alpha
+ *                           pre-multiplied. Apply pre-multiplication. If fg
+ *                           plane alpha is less than 0xff, apply modulation as
+ *                           well.
+ * @BLEND_OP_MAX:            Used to track maximum blend operation possible by
+ *                           mdp.
+ */
+enum {
+	BLEND_OP_NOT_DEFINED = 0,
+	BLEND_OP_OPAQUE,
+	BLEND_OP_PREMULTIPLIED,
+	BLEND_OP_COVERAGE,
+	BLEND_OP_MAX,
+};
+
 struct mdp_overlay {
 	struct msmfb_img src;
 	struct mdp_rect src_rect;
@@ -289,6 +339,7 @@ struct mdp_overlay {
 	uint32_t is_fg;		/* control alpha & transp */
 	uint32_t alpha;
 	uint32_t transp_mask;
+	uint32_t blend_op;
 	uint32_t flags;
 	uint32_t id;
 	uint32_t user_data[8];
@@ -479,6 +530,64 @@ struct msmfb_mdp_pp {
 		struct mdp_qseed_cfg_data qseed_cfg_data;
 		struct mdp_bl_scale_data bl_scale_data;
 	} data;
+};
+
+enum {
+	metadata_op_none,
+	metadata_op_base_blend,
+	metadata_op_frame_rate,
+	metadata_op_max
+};
+
+struct mdp_blend_cfg {
+	uint32_t is_premultiplied;
+};
+
+struct mdp_mixer_cfg {
+	uint32_t writeback_format;
+	uint32_t alpha;
+};
+
+struct msmfb_metadata {
+	uint32_t op;
+	uint32_t flags;
+	union {
+		struct mdp_blend_cfg blend_cfg;
+		uint32_t panel_frame_rate;
+	} data;
+};
+
+#define MDP_MAX_FENCE_FD	32
+#define MDP_BUF_SYNC_FLAG_WAIT	1
+
+struct mdp_buf_sync {
+	uint32_t flags;
+	uint32_t acq_fen_fd_cnt;
+        uint32_t session_id;
+	int *acq_fen_fd;
+	int *rel_fen_fd;
+	int *retire_fen_fd;
+};
+
+struct mdp_async_blit_req_list {
+	struct mdp_buf_sync sync;
+	uint32_t count;
+	struct mdp_blit_req req[];
+};
+
+#define MDP_DISPLAY_COMMIT_OVERLAY 0x00000001
+
+struct mdp_display_commit {
+	uint32_t flags;
+	uint32_t wait_for_finish;
+	struct fb_var_screeninfo var;
+};
+
+enum {
+	MDP_WRITEBACK_MIRROR_OFF,
+	MDP_WRITEBACK_MIRROR_ON,
+	MDP_WRITEBACK_MIRROR_PAUSE,
+	MDP_WRITEBACK_MIRROR_RESUME,
 };
 
 
