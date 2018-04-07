@@ -95,12 +95,12 @@ static struct hidp_session *__hidp_get_session(bdaddr_t *bdaddr)
 
 static struct device *hidp_get_device(struct hidp_session *session)
 {
-	bdaddr_t *src = &bt_sk(session->ctrl_sock->sk)->src;
-	bdaddr_t *dst = &bt_sk(session->ctrl_sock->sk)->dst;
+	bdaddr_t *dst = &session->bdaddr;
+
 	struct device *device = NULL;
 	struct hci_dev *hdev;
 
-	hdev = hci_get_route(dst, src);
+	hdev = hci_get_route(dst, BDADDR_ANY);
 	if (!hdev)
 		return NULL;
 
@@ -804,7 +804,7 @@ static int hidp_setup_hid(struct hidp_session *session,
 	hid->version = req->version;
 	hid->country = req->country;
 
-	strncpy(hid->name, req->name, 128);
+	strncpy(hid->name, req->name, sizeof(req->name) - 1);
 	strncpy(hid->phys, batostr(&bt_sk(session->ctrl_sock->sk)->src), 64);
 	strncpy(hid->uniq, batostr(&bt_sk(session->ctrl_sock->sk)->dst), 64);
 

@@ -20,10 +20,8 @@
    COPYRIGHTS, TRADEMARKS OR OTHER RIGHTS, RELATING TO USE OF THIS
    SOFTWARE IS DISCLAIMED.
 */
+// rollback to original BlueZ
 
-#ifdef CONFIG_BT_MGMT
-#include "mgmt_mgmt.h"
-#else
 #define MGMT_INDEX_NONE			0xFFFF
 
 struct mgmt_hdr {
@@ -164,6 +162,7 @@ struct mgmt_cp_set_io_capability {
 struct mgmt_cp_pair_device {
 	bdaddr_t bdaddr;
 	__u8 io_cap;
+    __u8 ssp_cap;
 } __packed;
 struct mgmt_rp_pair_device {
 	bdaddr_t bdaddr;
@@ -390,9 +389,3 @@ struct mgmt_ev_le_conn_params {
 	__u16 latency;
 	__u16 timeout;
 } __packed;
-
-//for WIFI Direct issue
-#define MGMT_OP_POWER_OFF		0x00050
-
-#endif /*BT_MGMT*/
-
